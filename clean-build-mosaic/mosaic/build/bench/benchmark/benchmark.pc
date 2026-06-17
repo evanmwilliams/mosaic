@@ -1,0 +1,12 @@
+prefix=/Users/malenacochrane
+exec_prefix=${prefix}
+libdir=/Users/malenacochrane/lib
+includedir=/Users/malenacochrane/include
+
+Name: benchmark
+Description: Google microbenchmark framework
+Version: 1.7.0.19
+
+Libs: -L${libdir} -lbenchmark
+Libs.private: -lpthread
+Cflags: -I${includedir}

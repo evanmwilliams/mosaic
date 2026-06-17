@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

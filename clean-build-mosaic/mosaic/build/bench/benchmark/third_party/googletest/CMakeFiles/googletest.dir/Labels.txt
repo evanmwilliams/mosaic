@@ -1,0 +1,14 @@
+# Target labels
+ googletest
+# Source files and their labels
+/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/CMakeFiles/googletest
+/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/CMakeFiles/googletest.rule
+/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/CMakeFiles/googletest-complete.rule
+/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/stamp/googletest-build.rule
+/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/stamp/googletest-configure.rule
+/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/stamp/googletest-download.rule
+/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/stamp/googletest-install.rule
+/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/stamp/googletest-mkdir.rule
+/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/stamp/googletest-patch.rule
+/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/stamp/googletest-test.rule
+/Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/build/bench/benchmark/third_party/googletest/stamp/googletest-update.rule

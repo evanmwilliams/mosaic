@@ -1,0 +1,155 @@
+==============================================================================
+MOSAIC COMPILER — LOCAL BUILD LOG (macOS, Apple Silicon arm64)
+Repo: https://github.com/manya-bansal/mosaic
+Host: macOS 26.5.1, arm64, clang/cmake/make via Homebrew
+Date: 2026-06-16
+==============================================================================
+This file records every command used to set up the local build, each with a
+compact annotation of what it does and why.
+
+------------------------------------------------------------------------------
+0. ENVIRONMENT INSPECTION
+------------------------------------------------------------------------------
+which git cmake make gcc g++ clang clang++ ninja python3
+    # Confirm toolchain availability. Found: git, cmake, make, gcc/g++ (clang
+    # shims), clang/clang++, python3. ninja NOT present -> use Unix Makefiles.
+
+sw_vers ; uname -m
+    # OS = macOS 26.5.1 ; arch = arm64 (Apple Silicon).
+
+------------------------------------------------------------------------------
+1. WORKSPACE + CLONE
+------------------------------------------------------------------------------
+mkdir -p logs
+    # Create logs/ dir inside Desktop/clean-build-mosaic for build-logs.txt and
+    # build-testing.txt as requested.
+
+git clone https://github.com/manya-bansal/mosaic.git
+    # Clone the Mosaic compiler source. Mosaic is built on top of TACO (the
+    # CMake project is literally named "taco"); it adds external-library call
+    # support to TACO's tensor-algebra compiler.
+
+git -C mosaic log -1 --format="%H %ci %s"
+    # Record exact checked-out commit for reproducibility:
+    # be9deffe430494282b7ee3807e94d15f3d319a98 (2023-04-07) "Create CITATION.cff"
+
+------------------------------------------------------------------------------
+2. UNDERSTANDING THE OFFICIAL BUILD (source of truth for fidelity)
+------------------------------------------------------------------------------
+# README.md prescribes (the "blessed" build path):
+#     git submodule update --init
+#     mkdir build && cd build
+#     cmake -DCMAKE_BUILD_TYPE='Release' -DCMAKE_INSTALL_PREFIX="${HOME}" \
+#           -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON ../
+#     make -j8
+# Tests:  make test   (or ./build/bin/taco-test)   Benchmarks: ./build/bin/taco-bench
+#
+# .github/workflows/buildandtest.yml (CI = authoritative "how it is verified"):
+#   - build-test-cpu:          cmake ..                         ; make -j2 ; make test
+#   - build-test-cpu-release:  cmake -DCMAKE_BUILD_TYPE=Release ..; make -j2 ; make test
+#   - openmp-python-asserts:   cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DOPENMP=ON -DPYTHON=ON
+#   - macos-clang:             cmake -DCMAKE_BUILD_TYPE=Debug -DPYTHON=ON .. ; make ; make test
+#   All test jobs set CTEST_OUTPUT_ON_FAILURE=1 and CTEST_PARALLEL_LEVEL=2.
+#
+# Fidelity decisions for this local build:
+#   * Use CMake + Unix Makefiles (exactly what README/CI use), NOT a substitute
+#     generator, so the build graph matches upstream.
+#   * Default test runner is `make test` (ctest) -> same target CI invokes.
+#   * The closest CI job to "macOS local" is build-test-python-macos-clang
+#     (Debug). We follow the README's primary path (Release) for the main build
+#     and additionally confirm the ctest target works, matching CI semantics.
+#
+# .gitmodules: three submodules are required by the build:
+#     python_bindings/pybind11   (pybind11)        -> needed only when PYTHON=ON
+#     test/bats                  (bats-core)        -> shell-based CLI tests
+#     bench/benchmark            (google/benchmark) -> taco-bench target
+#   CMakeLists.txt also auto-runs `git submodule update --init --recursive` and
+#   FATAL_ERRORs if pybind11 is missing, so submodules must be present.
+
+------------------------------------------------------------------------------
+3. SUBMODULES
+------------------------------------------------------------------------------
+git submodule update --init
+    # Fetch the three submodules. benchmark -> 49aa374, pybind11 -> 8de7772,
+    # bats -> dcaec03. (CMake also re-runs this recursively during configure.)
+
+------------------------------------------------------------------------------
+4. CMAKE CONFIGURE  (compatibility note)
+------------------------------------------------------------------------------
+cmake --version    # -> 4.3.2 on this machine.
+    # PROBLEM: repo's top-level CMakeLists declares cmake_minimum_required
+    # (VERSION 3.4.0). CMake 4.x removed compatibility with policies < 3.5 and
+    # ABORTS configure. This is purely a CMake-version gate, not a difference in
+    # how Mosaic builds.
+    #
+    # FIDELITY DECISION: rather than editing the repo's CMakeLists (which would
+    # diverge from upstream sources) or installing a 12-year-old CMake, we use
+    # CMake's own documented escape hatch: CMAKE_POLICY_VERSION_MINIMUM=3.5.
+    # This only relaxes the version gate; the generator (Unix Makefiles),
+    # compiler, flags, targets, and ctest harness remain byte-for-byte the
+    # upstream build graph. We pass it as an ENV VAR (not just -D) so it also
+    # propagates into the nested googletest sub-configure that
+    # BENCHMARK_DOWNLOAD_DEPENDENCIES=ON triggers.
+
+# First attempt (-D only) failed: top-level passed but the nested googletest
+# ExternalProject configure did not inherit the flag.
+
+export CMAKE_POLICY_VERSION_MINIMUM=3.5
+cmake -DCMAKE_BUILD_TYPE='Release' -DCMAKE_INSTALL_PREFIX="${HOME}" \
+      -DBENCHMARK_DOWNLOAD_DEPENDENCIES=ON ../
+    # Run from build/. Matches README's exact invocation (Release, install
+    # prefix = $HOME, benchmark deps downloaded). Result: "Configuring done /
+    # Generating done / Build files have been written to .../build". Success.
+
+sysctl -n hw.ncpu   # -> 14 cores; build with make -j14 (README uses -j8).
+
+------------------------------------------------------------------------------
+5. BUILD
+------------------------------------------------------------------------------
+export CMAKE_POLICY_VERSION_MINIMUM=3.5   # keep bridge set for the build too
+make -j14
+    # Run from build/. README uses -j8; -j14 = this machine's core count.
+    # RESULT: exit code 0. "[100%] Built target taco-bench". 0 compiler errors,
+    # 79 warnings (benign: -Wreorder-ctor in accelerator_interface headers,
+    # ld "ignoring duplicate libraries" for libbenchmark.a). Full output saved
+    # to logs/make-output.log.
+
+------------------------------------------------------------------------------
+6. BUILD ARTIFACT VERIFICATION
+------------------------------------------------------------------------------
+ls build/bin/   ;   ls build/lib/
+    # Key Mosaic/TACO artifacts produced:
+    #   build/lib/libtaco.dylib       -> the compiler library (SHARED, as the
+    #                                    CMake option TACO_SHARED_LIBRARY=ON asks)
+    #   build/bin/taco                -> the command-line tensor-algebra compiler
+    #   build/bin/taco-test           -> the C++ (gtest) test suite
+    #   build/bin/taco-bench          -> the benchmark driver
+    #   build/bin/taco-tensor_times_vector -> example app
+    # (Other *_test/*_gtest binaries belong to the bundled google/benchmark
+    #  submodule, not to Mosaic itself.)
+
+build/bin/taco --help
+    # Smoke test: the compiler runs and prints its full usage (vector add, SpMV,
+    # MTTKRP examples, scheduling options). Confirms the CLI links against
+    # libtaco.dylib and starts correctly.
+
+------------------------------------------------------------------------------
+7. FIDELITY SUMMARY (build)
+------------------------------------------------------------------------------
+The build is faithful to upstream and succeeds:
+  * Same toolchain shape as README/CI: CMake + Unix Makefiles + clang.
+  * Same configure flags as the README (Release, INSTALL_PREFIX=$HOME,
+    BENCHMARK_DOWNLOAD_DEPENDENCIES=ON). The only addition,
+    CMAKE_POLICY_VERSION_MINIMUM=3.5, is CMake's documented bridge for the
+    obsolete cmake_minimum_required(3.4.0); it changes NO build behavior.
+  * Same targets produced (libtaco.dylib, taco, taco-test, taco-bench).
+  * Source tree left UNMODIFIED (no patches to CMakeLists or .cpp/.h), so the
+    build graph and generated code match the original commit byte-for-byte.
+
+IMPORTANT (see logs/build-testing.txt for the test side): while the build is
+faithful and the compiler's code-generation works, the upstream RUNTIME path
+(Module::compile in src/codegen/module.cpp) is hardwired to a Linux x86_64
+paper-artifact environment (PATH_TO_MOSAIC_ARTIFACT -> MKL/TBLIS/GSL/CUDA, plus
+-mavx2 and GNU-ld -l:lib*.so syntax). That is how the original works, and it
+cannot execute kernels / run the test suite faithfully on macOS arm64 without
+modifying upstream source.
