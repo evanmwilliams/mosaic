@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../../lib/liboutput_test_helper.a CMakeFiles/output_test_helper.dir/output_test_helper.cc.o
-/usr/bin/ranlib ../../../lib/liboutput_test_helper.a

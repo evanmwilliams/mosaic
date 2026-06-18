@@ -1,3 +1,0 @@
-!!!! temp dir !!!!!! /var/folders/lx/nfwnprmj3wxc3vn0tdrk4kbh0000gn/T/taco_tmp_PVWSCk/
-libc++abi: terminating due to uncaught exception of type taco::TacoException: Error at /Users/malenacochrane/Desktop/clean-build-mosaic/mosaic/src/codegen/module.cpp:158 in compile:
- Please set the environment variable PATH_TO_MOSAIC_ARTIFACT.To do so, run (in the mosaic/bench/bench-scripts/ dir): source mosaic_env_var.sh.
