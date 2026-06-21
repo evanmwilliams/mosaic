@@ -4801,6 +4801,7 @@ static vector<vector<int> > makeCombi(int n, int k)
 IndexStmt IndexStmt::helperCheckForMatches(IndexStmt stmt, std::vector<FunctionInterface> functionInterfaces, std::set<std::pair<std::string, std::string>>& expressions) const{
 
   std::stack<std::tuple<Access, ConcreteAccelerateCodeGenerator, FunctionInterface, ArgumentMap>> varCodeGen;
+  std::set<std::pair<std::string, std::string>> scheduleBindingsForPrinting;
   // std::map<ConcreteAccelerateCodeGenerator, FunctionInterface> abstractInterface;
 
   if (!isa<Assignment>(stmt)) {
@@ -4830,6 +4831,7 @@ IndexStmt IndexStmt::helperCheckForMatches(IndexStmt stmt, std::vector<FunctionI
       argumentMap = hasPreciseMatch(expr, reduxRefStmt.getRhs());
       if (argumentMap.possible){
         expressions.insert({ss.str(), descripton.getNode()->getFunctionName()});
+        scheduleBindingsForPrinting.insert({ss.str(), descripton.getNode()->getFunctionName()}); // Inserts (sub-expression, library function) pair into printing set
         // Generate STMT query if a constraint exists
         // True indicates that we are interested in finding tilings.
         if (descripton.getNode()->getConstraints().defined()){
@@ -4877,6 +4879,7 @@ IndexStmt IndexStmt::helperCheckForMatches(IndexStmt stmt, std::vector<FunctionI
               if (argumentMapConst.possible){
                 found = true;
                 expressions.insert({ss.str(), descripton.getNode()->getFunctionName()});
+                scheduleBindingsForPrinting.insert({ss.str(), descripton.getNode()->getFunctionName()});
 
                 if (descripton.getNode()->getConstraints().defined()){
                   std::map<IndexVar, int> currentDims;
@@ -4909,6 +4912,13 @@ IndexStmt IndexStmt::helperCheckForMatches(IndexStmt stmt, std::vector<FunctionI
     varCodeGen.pop();
   }
 
+  std::cout << "--- Operation for this Schedule: ---" << std::endl;
+  std::cout << stmt << std::endl;
+  std::cout << "--- Bindings for this Schedule: ---" << std::endl;
+
+  for (auto& binding : scheduleBindingsForPrinting) {
+    std::cout << "   " << binding.first << "  ->  " << binding.second << std::endl;
+  }
   return stmtRewrite;
 }
 
@@ -4923,9 +4933,12 @@ std::vector<IndexStmt> IndexStmt::autoAccelerate(IndexStmt stmt, std::vector<Fun
   std::set<std::pair<std::string, std::string>> expressions;
   // Account for the case where there are no mappings.
   expressions.insert({"", ""});
+  
+  std::cout << "____Schedule 1____" << std::endl;
   helperCheckForMatches(stmt, functionInterfaces, expressions);
 
   for (int i = 0; i < possibleRewrites.size(); i++){
+      std::cout << "____Schedule " << (i + 2) << "____" << std::endl;
       possibleStmts.push_back(helperCheckForMatches(possibleRewrites[i], functionInterfaces, expressions));
   }
 
