@@ -4801,7 +4801,9 @@ static vector<vector<int> > makeCombi(int n, int k)
 IndexStmt IndexStmt::helperCheckForMatches(IndexStmt stmt, std::vector<FunctionInterface> functionInterfaces, std::set<std::pair<std::string, std::string>>& expressions) const{
 
   std::stack<std::tuple<Access, ConcreteAccelerateCodeGenerator, FunctionInterface, ArgumentMap>> varCodeGen;
-  std::set<std::pair<std::string, std::string>> scheduleBindingsForPrinting;
+
+  std::set<std::pair<std::string, std::string>> scheduleBindingsForPrinting; // For Printing/Inspection
+
   // std::map<ConcreteAccelerateCodeGenerator, FunctionInterface> abstractInterface;
 
   if (!isa<Assignment>(stmt)) {
@@ -4828,14 +4830,18 @@ IndexStmt IndexStmt::helperCheckForMatches(IndexStmt stmt, std::vector<FunctionI
       ss << expr; 
 
       if (expressions.count({ss.str(), descripton.getNode()->getFunctionName()})) {
-        scheduleBindingsForPrinting.insert({ss.str(), descripton.getNode()->getFunctionName()}); // Inserts (sub-expression, library function) pair into printing set
+        // Inserts (sub-expression, library function) pair into printing set:
+        scheduleBindingsForPrinting.insert({ss.str(), descripton.getNode()->getFunctionName()}); 
+
         continue;
       }
 
       argumentMap = hasPreciseMatch(expr, reduxRefStmt.getRhs());
       if (argumentMap.possible){
         expressions.insert({ss.str(), descripton.getNode()->getFunctionName()});
-        scheduleBindingsForPrinting.insert({ss.str(), descripton.getNode()->getFunctionName()}); // Inserts (sub-expression, library function) pair into printing set
+        // Inserts (sub-expression, library function) pair into printing set:
+        scheduleBindingsForPrinting.insert({ss.str(), descripton.getNode()->getFunctionName()}); 
+
         // Generate STMT query if a constraint exists
         // True indicates that we are interested in finding tilings.
         if (descripton.getNode()->getConstraints().defined()){
@@ -4916,14 +4922,18 @@ IndexStmt IndexStmt::helperCheckForMatches(IndexStmt stmt, std::vector<FunctionI
     varCodeGen.pop();
   }
 
+  // Prints Schedule Operation:
   std::cout << "  Operation for this Schedule:  " << std::endl;
   std::cout << "    " << stmt << std::endl;
+
+  //Prints then clears printing set of Bindings:
   std::cout << "  Bindings for this Schedule:   " << std::endl;
   for (auto& binding : scheduleBindingsForPrinting) {
     std::cout << "      " << binding.first << "  ->  " << binding.second << std::endl;
   }
   std::cout << "\n";
   scheduleBindingsForPrinting.clear();
+  
   return stmtRewrite;
 }
 
