@@ -4919,6 +4919,7 @@ IndexStmt IndexStmt::helperCheckForMatches(IndexStmt stmt, std::vector<FunctionI
   for (auto& binding : scheduleBindingsForPrinting) {
     std::cout << "   " << binding.first << "  ->  " << binding.second << std::endl;
   }
+  scheduleBindingsForPrinting.clear();
   return stmtRewrite;
 }
 
