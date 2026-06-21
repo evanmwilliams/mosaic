@@ -4827,7 +4827,11 @@ IndexStmt IndexStmt::helperCheckForMatches(IndexStmt stmt, std::vector<FunctionI
       stringstream ss; 
       ss << expr; 
 
-      if (expressions.count({ss.str(), descripton.getNode()->getFunctionName()})) continue;
+      if (expressions.count({ss.str(), descripton.getNode()->getFunctionName()})) {
+        scheduleBindingsForPrinting.insert({ss.str(), descripton.getNode()->getFunctionName()}); // Inserts (sub-expression, library function) pair into printing set
+        continue;
+      }
+
       argumentMap = hasPreciseMatch(expr, reduxRefStmt.getRhs());
       if (argumentMap.possible){
         expressions.insert({ss.str(), descripton.getNode()->getFunctionName()});
@@ -4912,13 +4916,13 @@ IndexStmt IndexStmt::helperCheckForMatches(IndexStmt stmt, std::vector<FunctionI
     varCodeGen.pop();
   }
 
-  std::cout << "--- Operation for this Schedule: ---" << std::endl;
-  std::cout << stmt << std::endl;
-  std::cout << "--- Bindings for this Schedule: ---" << std::endl;
-
+  std::cout << "  Operation for this Schedule:  " << std::endl;
+  std::cout << "    " << stmt << std::endl;
+  std::cout << "  Bindings for this Schedule:   " << std::endl;
   for (auto& binding : scheduleBindingsForPrinting) {
-    std::cout << "   " << binding.first << "  ->  " << binding.second << std::endl;
+    std::cout << "      " << binding.first << "  ->  " << binding.second << std::endl;
   }
+  std::cout << "\n";
   scheduleBindingsForPrinting.clear();
   return stmtRewrite;
 }
