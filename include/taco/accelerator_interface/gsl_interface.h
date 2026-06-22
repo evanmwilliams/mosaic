@@ -301,4 +301,31 @@ class GSLSymmetricGemv : public AbstractFunctionInterface{
 };
 
 
-#endif 
+class GSLMatrixMul : public AbstractFunctionInterface{
+    public: 
+        GSLMatrixMul() : x(TensorObject(Type(taco::Float32, {Dimension(), Dimension()}), Format{Dense, Dense})),
+                         y(TensorObject(Type(taco::Float32, {Dimension(), Dimension()}), Format{Dense, Dense})),
+                         z(TensorObject(Type(taco::Float32, {Dimension(), Dimension()}), Format{Dense, Dense})),
+                         i(IndexVar()) {};
+
+        // IndexExpr getRHS() const override {return x(i);}
+        // IndexExpr getLHS() const override {return x(i);}
+        AcceleratorStmt getStmt() const override {return z(i, j) = x(i, j) * y(i, j);}
+        std::vector<Argument> getArguments() const override {return 
+                                                {   new DimArg(i), 
+                                                    new TensorName(x),
+                                                    new TensorName(y),
+                                                    new TensorName(z)
+                                                };}
+        std::string getReturnType() const override {return "void";}
+        std::string getFunctionName() const override {return "gsl_matrix_float_mul_elements";}
+
+    private: 
+        TensorObject x;
+        TensorObject y;
+        TensorObject z;
+        IndexVar i;
+        IndexVar j;
+};
+
+#endif
