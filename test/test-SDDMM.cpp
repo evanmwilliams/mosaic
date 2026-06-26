@@ -18,8 +18,7 @@ int main() {
   A.registerAccelerator(new Saxpy());          
   A.registerAccelerator(new Sdot());           
   A.registerAccelerator(new MatrixMultiply());  
-
-  // Run the automatic mapper on the registered functions.
+  
   IndexStmt stmt = A.getAssignment();
   if (isEinsumNotation(stmt)) stmt = makeReductionNotation(stmt);
   stmt.autoAccelerate(stmt, A.getRegisteredAccelerators());
