@@ -44,6 +44,8 @@ static void bench_gemv_tblis(benchmark::State& state) {
    
     IndexStmt stmt = res.getAssignment().concretize();
     stmt = stmt.accelerate(new TblisGemv(), accelerateExpr, true);
+    std::cout << stmt << std::endl;
+    std::cout << "-- End of Schedule --" << std::endl;
 
     res.compile(stmt);
     res.assemble();
