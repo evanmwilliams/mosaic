@@ -203,7 +203,6 @@ ArgumentMap hasPreciseMatch(IndexExpr e1, AcceleratorExpr e2){
 
     std::map<TensorObject, TensorVar> tensors; 
     std::map<IndexVar, IndexVar> indexVars; 
-    std::map<IndexVar, IndexVar> indexVarsReverse; 
 
     PrecisePatternIndexExpr(e1, e1Pattern, e1Nodes);
     PrecisePatternAccelExpr(e2, e2Pattern, e2Nodes);
@@ -256,7 +255,6 @@ ArgumentMap hasPreciseMatch(IndexExpr e1, AcceleratorExpr e2){
 
                     for (size_t i = 0; i < node2->indexVars.size(); i++){
                         indexVars[node2->indexVars[i]] = node1->indexVars[i];
-                        indexVarsReverse[node1->indexVars[i]] = node2->indexVars[i];
                     }
 
                     break;
@@ -291,53 +289,6 @@ bool isSameReduxPattern(AcceleratorStmt refStmt, IndexStmt stmt){
 bool matches(AcceleratorStmt refStmt, IndexStmt stmt){
   isSameReduxPattern(refStmt, stmt);
   return true;
-}
-
-std::map<IndexExpr, AcceleratorExpr> getMatchingTensors(IndexExpr e1, AcceleratorExpr e2){
-
-    auto getTensorsIndexExpr = [&](IndexExpr e, std::vector<EndNodeTypes>& precisePattern, std::vector<IndexExpr>& nodes) {
-        match(e,
-            std::function<void(const AccessNode*, Matcher*)>([&](const AccessNode* op, Matcher* ctx) {
-                precisePattern.push_back(ACCESS);
-                nodes.push_back(op);
-            }),
-            std::function<void(const LiteralNode*, Matcher*)>([&](const LiteralNode* op, Matcher* ctx) {
-                precisePattern.push_back(LITERALNODE);
-                nodes.push_back(op);
-            })
-        );
-    };
-
-    auto getTensorsAccelExpr = [&](AcceleratorExpr e, std::vector<EndNodeTypes>& precisePattern, std::vector<AcceleratorExpr>& nodes) {
-        acceleratorMatch(e,
-            std::function<void(const AcceleratorAccessNode*, AcceleratorMatcher*)>([&](const AcceleratorAccessNode* op, AcceleratorMatcher* ctx) {
-                precisePattern.push_back(ACCESS);
-                nodes.push_back(op);
-            }),
-            std::function<void(const AcceleratorLiteralNode*, AcceleratorMatcher*)>([&](const AcceleratorLiteralNode* op, AcceleratorMatcher* ctx) {
-                precisePattern.push_back(LITERALNODE);
-                nodes.push_back(op);
-            })
-        );
-    };
-
-    std::vector<EndNodeTypes> e1Pattern;
-    std::vector<EndNodeTypes> e2Pattern;
-
-    std::vector<IndexExpr> e1Nodes;
-    std::vector<AcceleratorExpr> e2Nodes;
-
-    std::map<IndexExpr, AcceleratorExpr> tensors; 
-
-    getTensorsIndexExpr(e1, e1Pattern, e1Nodes);
-    getTensorsAccelExpr(e2, e2Pattern, e2Nodes);
-
-    for (size_t i = 0; i < e1Nodes.size() ; i++){
-        tensors[e1Nodes[i]] = e2Nodes[i];
-    }
-
-    return tensors;
-
 }
 
 }

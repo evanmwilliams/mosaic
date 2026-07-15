@@ -31,7 +31,7 @@ static std::string exec(const char* cmd) {
 
 static void bench_blockedSparse4T_5_gsl(benchmark::State& state) {
     gsl_compile = true;
-   
+
    int dim = state.range(0);
   
    Tensor<float> B("B", {dim, dim, dim, dim}, Format{Sparse, Dense, Sparse, Dense});
@@ -83,7 +83,7 @@ static void bench_blockedSparse4T_5_gsl(benchmark::State& state) {
     state.ResumeTiming();
     pair.first(func.data());
   }
-    gsl_compile = false;
+   gsl_compile = false;
 
 }
 

@@ -40,7 +40,6 @@ class IndexVar;
 class WindowedIndexVar;
 class IndexSetVar;
 class TensorVar;
-class ArgumentMap;
 
 class IndexStmt;
 class IndexExpr;
@@ -85,8 +84,6 @@ class IndexStmtVisitorStrict;
 class AcceleratorDescription;
 class DynamicIndexAccess;
 class DynamicIndexIterator;
-
-class AcceleratorExpr;
 
 /// Return true if the index statement is of the given subtype.  The subtypes
 /// are Assignment, Forall, Where, Sequence, and Multi.
@@ -618,9 +615,7 @@ public:
   IndexStmt concretizeAccelerated(const std::vector<FunctionInterface>& functionInterface) const;
 
   std::vector<IndexStmt> autoAccelerate(IndexStmt stmt, std::vector<FunctionInterface> functionInterface) const;
-  IndexStmt helperCheckForMatches(IndexStmt stmt, std::vector<FunctionInterface> functionInterfaces, std::set<std::pair<std::string, std::string>>& expressions) const;
-  IndexExpr tryIndicesConstant(AcceleratorExpr toMatch, IndexExpr stmt, bool& success) const;
-  IndexExpr tryPromotion(AcceleratorExpr toMatch, IndexExpr stmt, bool& success) const;
+  IndexStmt helperCheckForMatches(IndexStmt stmt, std::vector<FunctionInterface> functionInterfaces) const;
 
   /// Takes any index notation and concretizes unknowns to make it concrete notation
   /// given a Provenance Graph of indexVars

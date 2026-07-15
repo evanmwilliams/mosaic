@@ -60,9 +60,9 @@ inline std::string getTmpdir() {
 
     cachedtmpdir = tacotmpdir;
     std::cout << "!!!! temp dir !!!!!! " << tacotmpdir << std::endl;
-    // cleanup unless we are in debug mode
+    //cleanup unless we are in debug mode
     // #ifndef TACO_DEBUG
-      atexit(cachedtmpdirCleanup);
+    //   atexit(cachedtmpdirCleanup);
     // #endif
   }
   // std::cout << cachedtmpdir << std::endl;

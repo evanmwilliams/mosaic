@@ -33,19 +33,21 @@
 
 #define TACO_BENCH_ARG(bench, name, arg)  \
   BENCHMARK_CAPTURE(bench, name, arg)     \
-  ->Unit(benchmark::kMillisecond)         \
-  ->Repetitions(10)                       \
+  ->Unit(benchmark::kMicrosecond)         \
   ->Iterations(1)                         \
+  ->Repetitions(10)               \
   ->ReportAggregatesOnly(true)            \
   ->UseRealTime()                         \
-  ->MinWarmUpTime(10)
+  >MinWarmUpTime(10)
 
 #define TACO_BENCH_ARGS(bench, name, ...)       \
   BENCHMARK_CAPTURE(bench, name, __VA_ARGS__)   \
   ->Unit(benchmark::kMicrosecond)               \
   ->Iterations(1)                               \
   ->ReportAggregatesOnly(true)                  \
-  ->UseRealTime()
+  ->Repetitions(10)                             \
+  ->UseRealTime()                               \
+  ->MinWarmUpTime(10)
 
 std::string getEnvVar(std::string varname);
 std::string getTacoTensorPath();

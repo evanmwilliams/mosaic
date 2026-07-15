@@ -131,17 +131,15 @@ public:
                     x(TensorObject(Type(taco::Float32, {Dimension(), Dimension()}),  Format{Dense, Dense})),
                     y(TensorObject(Type(taco::Float32, {Dimension(), Dimension()}),  Format{Dense, Dense})),
                     z(TensorObject(Type(taco::Float32, {Dimension(), Dimension()}),  Format{Dense, Dense})),
-                    m(IndexVar()),
-                    k(IndexVar()),
-                    n(IndexVar()) {};
+                    i(IndexVar()),
+                    j(IndexVar()),
+                    k(IndexVar()) {};
 
-        AcceleratorStmt getStmt() const override {return z(m, n) = x(m, k) * y(k, n);}
+        AcceleratorStmt getStmt() const override {return z(i, k) = x(i, j) * y(j, k);}
         std::vector<Argument> getArguments() const override {
                                                 return 
                                                 {
-                                                    new DimArg(m), 
-                                                    new DimArg(n), 
-                                                    new DimArg(k), 
+                                                    new DimArg(i), 
                                                     new TensorObjectArg(x),
                                                     new TensorObjectArg(y),
                                                     new TensorObjectArg(z),
@@ -153,9 +151,9 @@ public:
         TensorObject x;
         TensorObject y;
         TensorObject z;
-        IndexVar m;
+        IndexVar i;
+        IndexVar j;
         IndexVar k;
-        IndexVar n;
 };
 
 class MklDot : public AbstractFunctionInterface{
@@ -210,39 +208,6 @@ class MklAdd : public AbstractFunctionInterface{
         TensorObject z;
         IndexVar i;
         IndexVar j;
-};
-
-class SparseMklMMCOOCSR : public AbstractFunctionInterface{
-  public:
-    SparseMklMMCOOCSR() : 
-                    x(TensorObject(Type(taco::Float32, {Dimension(), Dimension()}),  COO(2))),
-                    y(TensorObject(Type(taco::Float32, {Dimension(), Dimension()}),  Format{Dense, Dense})),
-                    z(TensorObject(Type(taco::Float32, {Dimension(), Dimension()}),  Format{Dense, Dense})),
-                    var(DeclVar("taco_tensor_t *", "CSR_tensor")),
-                    i(IndexVar()),
-                    j(IndexVar()),
-                    k(IndexVar()) {};
-
-        AcceleratorStmt getStmt() const override {return z(i, k) = x(i, j) * y(j, k);}
-        std::vector<Argument> getArguments() const override {
-                                                return 
-                                                {
-                                                    new DimArg(i), 
-                                                    new TensorName(x),
-                                                    new TensorName(y),
-                                                    new TensorName(z),
-                                                };}
-                                                
-        std::string getReturnType() const override {return "void";}
-        std::string getFunctionName() const override {return "wrapper_convert";}
-    private: 
-        TensorObject x;
-        TensorObject y;
-        TensorObject z;
-        IndexVar i;
-        DeclVar var;
-        IndexVar j;
-        IndexVar k;
 };
 
 #endif 
