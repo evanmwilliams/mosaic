@@ -13,7 +13,7 @@
 using namespace taco;
 
 
-static void bench_gemv_autoaccelerate_tblis(benchmark::State& state) {
+static void bench_gemv_tblis_all_schedules(benchmark::State& state) {
 
      // actual computation
    int dim = state.range(0);
@@ -89,4 +89,4 @@ static void bench_gemv_autoaccelerate_tblis(benchmark::State& state) {
 
 }
 
-TACO_BENCH(bench_gemv_autoaccelerate_tblis)->DenseRange(250, 5000, 250);
+TACO_BENCH(bench_gemv_tblis_all_schedules)->DenseRange(250, 5000, 250);
