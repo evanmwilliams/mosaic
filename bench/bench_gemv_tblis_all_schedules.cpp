@@ -40,37 +40,25 @@ static void bench_gemv_tblis_all_schedules(benchmark::State& state) {
        FunctionInterface(new TblisGemv())
    };
 
+   Tensor<float> scheduleOwner("res", {dim}, Format{Dense});
+   scheduleOwner(i) = accelerateExpr;
+
+   IndexStmt stmt = makeReductionNotation(scheduleOwner.getAssignment());
+   std::vector<IndexStmt> boundSchedules =
+       stmt.autoAccelerate(stmt, availableInterfaces);
+
    for (auto _ : state) {
     // Setup.
     state.PauseTiming();
-    Tensor<float> scheduleProbe("scheduleProbe", {dim}, Format{Dense});
-    scheduleProbe(i) = accelerateExpr;
-
-    IndexStmt probeStmt = makeReductionNotation(scheduleProbe.getAssignment());
-    std::vector<IndexStmt> probeSchedules =
-        probeStmt.autoAccelerate(probeStmt, availableInterfaces);
 
     for (size_t scheduleIndex = 0;
-         scheduleIndex < probeSchedules.size();
+         scheduleIndex < boundSchedules.size();
          scheduleIndex++) {
-      // A Tensor can only proceed through compile/assemble/compute once. Build
-      // each schedule from a fresh result tensor so those lifecycle flags and
-      // generated modules are not shared between schedules.
+      // Each returned schedule gets an independent Tensor lifecycle and module.
       Tensor<float> res("res", {dim}, Format{Dense});
       res(i) = accelerateExpr;
 
-      IndexStmt stmt = makeReductionNotation(res.getAssignment());
-      std::vector<IndexStmt> boundSchedules =
-          stmt.autoAccelerate(stmt, availableInterfaces);
-
-      if (scheduleIndex >= boundSchedules.size()) {
-        state.ResumeTiming();
-        state.SkipWithError(
-            "autoAccelerate returned an inconsistent schedule count");
-        return;
-      }
-
-      IndexStmt boundSchedule = boundSchedules[scheduleIndex];
+      const IndexStmt& boundSchedule = boundSchedules[scheduleIndex];
 
       std::cout << "\n========== FULL SCHEDULE "
                 << (scheduleIndex + 1)
